@@ -1,2 +1,2 @@
 # Snake-game pyhton
- A simple snake game in python, trying out pygames
+ A simple snake game in python, trying out turtule.
