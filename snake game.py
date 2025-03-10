@@ -1,105 +1,187 @@
-#snake game
 import turtle
 import time
 import random
 
-#window 
-win = turtle.Screen()
-win.bgcolor("black")
-win.window_height = 700
-win.window_width = 700
+class SnakeGame:
+    def __init__(self):
+        # Window setup
+        self.win = turtle.Screen()
+        self.win.title("Snake Game")
+        self.win.bgcolor("black")
+        self.win.setup(width=700, height=700)
+        self.win.tracer(0)
 
-#score
-score = 0
-high_score = 1
-score_screen = turtle.Turtle()
-score_screen.speed(0)
-score_screen.color("white")
-score_screen.penup()
-score_screen.ht()
-score_screen.goto(0, 300)
-score_screen.write("SCORE: {} || High SCORE: {}".format(str(score), str(high_score)),move=False,align="left")
-#food
-food = turtle.Turtle()
-food.speed(0)
-food.shape("circle")
-food.color("green")
-food.penup()
-food.goto(0,100)
+        # Game state
+        self.score = 0
+        self.high_score = 0
+        self.delay = 0.1
+        self.game_on = True
 
-#head
-head = turtle.Turtle()
-head.speed(0)
-head.shape("square")
-head.color("red")
-head.penup()
-head.goto(0,0)
-head.direction = "stop"
+        # Initialize game objects
+        self.create_snake()
+        self.create_food()
+        self.create_score_display()
+        self.create_instruction_display()
 
-delay = 0.15
+        # Key bindings
+        self.setup_controls()
 
-#head movment
-def move():
-    if head.direction == "up":
-        head.sety(head.ycor() + 20)
+    def create_snake(self):
+        # Create snake head
+        self.head = turtle.Turtle()
+        self.head.speed(0)
+        self.head.shape("square")
+        self.head.color("red")
+        self.head.penup()
+        self.head.goto(0, 0)
+        self.head.direction = "stop"
 
-    if head.direction == "down":
-        head.sety(head.ycor() - 20)
+        # Snake body segments
+        self.segments = []
 
-    if head.direction == "left":
-        head.setx(head.xcor() - 20)   
+    def create_food(self):
+        self.food = turtle.Turtle()
+        self.food.speed(0)
+        self.food.shape("circle")
+        self.food.color("green")
+        self.food.penup()
+        self.food.goto(0, 100)
 
-    if head.direction == "right":
-        head.setx(head.xcor() + 20)
+    def create_score_display(self):
+        self.score_display = turtle.Turtle()
+        self.score_display.speed(0)
+        self.score_display.color("white")
+        self.score_display.penup()
+        self.score_display.hideturtle()
+        self.score_display.goto(0, 300)
+        self.update_score_display()
 
-def go_up():
-    head.direction = "up"
-def go_down():
-    head.direction = "down"
-def go_left():
-    head.direction = "left"
-def go_right():
-    head.direction = "right"
+    def create_instruction_display(self):
+        instructions = turtle.Turtle()
+        instructions.speed(0)
+        instructions.color("white")
+        instructions.penup()
+        instructions.hideturtle()
+        instructions.goto(0, -320)
+        instructions.write("Controls: W/A/S/D to move | R to restart", align="center", font=("Arial", 14, "normal"))
 
-#assigning keys for movment
-win.listen()
-win.onkeypress(go_up, "w")
-win.onkeypress(go_down, "s")
-win.onkeypress(go_left, "a")
-win.onkeypress(go_right, "d")
+    def setup_controls(self):
+        self.win.listen()
+        self.win.onkeypress(self.go_up, "w")
+        self.win.onkeypress(self.go_down, "s")
+        self.win.onkeypress(self.go_left, "a")
+        self.win.onkeypress(self.go_right, "d")
+        self.win.onkeypress(self.restart_game, "r")
 
-#movment updates
-while True:
-    win.update()
-    if head.distance(food) < 20:
-        food.goto(random.randint(-350, 350),random.randint(-350, 350))
-    #Score increase
-        score += 1
-        score_screen.clear()
-        score_screen.write("SCORE: {} || High SCORE: {}".format(score, high_score), move=False)
-    #edges of the game
-    if head.xcor() < -350 or head.xcor() > 350:
-        score_screen.clear()
-        score = 0
-        score_screen.write("SCORE: {} || High SCORE: {}".format(score, high_score), move=False)
-        head.goto(0,0)
-        head.direction = "stop"
-    if head.ycor() < -300 or head.ycor() > 300:
-         score_screen.clear()
-         score = 0
-         score_screen.write("SCORE: {} || High SCORE: {}".format(score, high_score), move=False)
-         head.goto(0,0)
-         head.direction = "stop"
-    #High score
-    if score > high_score:
-        high_score = score
-        score_screen.clear()
-        score_screen.write("Score: {} || High Score: {}".format(score,high_score), move=False,align="left")
+    def move(self):
+        # Move snake body
+        for i in range(len(self.segments)-1, 0, -1):
+            x = self.segments[i-1].xcor()
+            y = self.segments[i-1].ycor()
+            self.segments[i].goto(x, y)
 
-    move()
+        # Move first segment to head
+        if len(self.segments) > 0:
+            x = self.head.xcor()
+            y = self.head.ycor()
+            self.segments[0].goto(x, y)
 
-    time.sleep(delay)
-#holds the window open
-win.mainloop()
+        # Move head
+        if self.head.direction == "up":
+            self.head.sety(self.head.ycor() + 20)
+        elif self.head.direction == "down":
+            self.head.sety(self.head.ycor() - 20)
+        elif self.head.direction == "left":
+            self.head.setx(self.head.xcor() - 20)
+        elif self.head.direction == "right":
+            self.head.setx(self.head.xcor() + 20)
+
+    def go_up(self):
+        if self.head.direction != "down":
+            self.head.direction = "up"
+
+    def go_down(self):
+        if self.head.direction != "up":
+            self.head.direction = "down"
+
+    def go_left(self):
+        if self.head.direction != "right":
+            self.head.direction = "left"
+
+    def go_right(self):
+        if self.head.direction != "left":
+            self.head.direction = "right"
+
+    def add_segment(self):
+        segment = turtle.Turtle()
+        segment.speed(0)
+        segment.shape("square")
+        segment.color("grey")
+        segment.penup()
+        self.segments.append(segment)
+
+    def update_score_display(self):
+        self.score_display.clear()
+        self.score_display.write(f"Score: {self.score} | High Score: {self.high_score}", 
+                                align="center", font=("Arial", 24, "normal"))
+
+    def check_collision(self):
+        # Check for wall collision
+        if (self.head.xcor() > 330 or self.head.xcor() < -330 or 
+            self.head.ycor() > 330 or self.head.ycor() < -330):
+            return True
+
+        # Check for body collision
+        for segment in self.segments:
+            if self.head.distance(segment) < 20:
+                return True
+        return False
+
+    def reset_game(self):
+        # Update high score
+        if self.score > self.high_score:
+            self.high_score = self.score
+
+        # Reset score and snake
+        self.score = 0
+        self.head.goto(0, 0)
+        self.head.direction = "stop"
+
+        # Hide segments
+        for segment in self.segments:
+            segment.goto(1000, 1000)
+        self.segments.clear()
+
+        self.update_score_display()
+        self.game_on = True
+
+    def restart_game(self):
+        if not self.game_on:
+            self.reset_game()
+
+    def run(self):
+        while True:
+            self.win.update()
+
+            if self.game_on:
+                if self.check_collision():
+                    self.game_on = False
+                else:
+                    # Check for food collision
+                    if self.head.distance(self.food) < 20:
+                        self.food.goto(random.randint(-330, 330), random.randint(-330, 330))
+                        self.add_segment()
+                        self.score += 1
+                        self.update_score_display()
+                        self.delay *= 0.95  # Increase speed
+
+                    self.move()
+
+            time.sleep(self.delay)
+
+# Create and run the game
+if __name__ == "__main__":
+    game = SnakeGame()
+    game.run()
 
 
